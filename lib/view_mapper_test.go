@@ -6,12 +6,11 @@ import (
 )
 
 func TestViewMapper_Basic(t *testing.T) {
-	view := ViewDefinition{
-		Name:       "habit",
-		KeyOrder:   []string{"user", "habit", "event"},
-		TimeFormat: "2006-01-02",
-	}
-
+	view := NewViewDefinition(
+		"habit",
+		[]string{"user", "habit", "event"},
+		"2006-01-02",
+	)
 	mapper := NewViewMapper(view)
 
 	ev := Event{
@@ -46,11 +45,11 @@ func TestViewMapper_Basic(t *testing.T) {
 }
 
 func TestViewMapper_MissingLabel(t *testing.T) {
-	view := ViewDefinition{
-		Name:       "habit",
-		KeyOrder:   []string{"user", "habit", "event"},
-		TimeFormat: "2006-01-02",
-	}
+	view := NewViewDefinition(
+		"habit",
+		[]string{"user", "habit", "event"},
+		"2006-01-02",
+	)
 
 	mapper := NewViewMapper(view)
 

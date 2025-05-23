@@ -11,23 +11,26 @@ type ViewDefinition struct {
 	TimeFormat string
 }
 
+func NewViewDefinition(name string, keyOrder []string, timeFormat string) *ViewDefinition {
+	return &ViewDefinition{
+		Name:       name,
+		KeyOrder:   keyOrder,
+		TimeFormat: timeFormat,
+	}
+}
+
 func (v *ViewDefinition) String() string {
 	return fmt.Sprintf("View[%s] Keys: %v, TimeFormat: %s", v.Name, v.KeyOrder, v.TimeFormat)
 }
 
 type ViewMapper struct {
-	d ViewDefinition
+	d *ViewDefinition
 }
 
-func NewViewMapper(v ViewDefinition) *ViewMapper {
+func NewViewMapper(v *ViewDefinition) *ViewMapper {
 	return &ViewMapper{
 		d: v,
 	}
-}
-
-type Event struct {
-	Timestamp time.Time
-	Labels    map[string]string
 }
 
 func (v *ViewMapper) PartitionKey(e Event) (string, error) {
@@ -54,4 +57,9 @@ func (v *ViewMapper) TreePath(e Event) ([]string, error) {
 	}
 
 	return path, nil
+}
+
+type Event struct {
+	Timestamp time.Time
+	Labels    map[string]string
 }

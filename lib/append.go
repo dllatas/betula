@@ -44,7 +44,7 @@ func (v *ViewInstance) Append(e Event) error {
 		var next *Node
 
 		orderKey := v.Mapper.d.KeyOrder[idx]
-		mapKey := orderKey + ":" + treeValue
+		mapKey := shardMapKey(orderKey, treeValue)
 
 		child, found := (*children)[mapKey]
 		if found {
@@ -60,6 +60,10 @@ func (v *ViewInstance) Append(e Event) error {
 	}
 
 	return nil
+}
+
+func shardMapKey(orderKey, treeValue string) string {
+	return orderKey + ":" + treeValue
 }
 
 func (v *ViewInstance) addShard(s *Shard) {

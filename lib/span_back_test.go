@@ -84,7 +84,11 @@ func TestTruncateBack(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		got := TruncateBack(c.Ref, c.Unit, c.Count)
+		got, err := truncateBack(c.Ref, c.Unit, c.Count)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+
 		if !got.Equal(c.Want) {
 			t.Errorf("%s: expected %v, got %v", c.Message, c.Want, got)
 		}
@@ -238,7 +242,10 @@ func TestTruncateToUnit(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := truncateToUnit(tt.input, tt.unit)
+			got, err := truncateToUnit(tt.input, tt.unit)
+			if err != nil {
+				t.Fatal(err.Error())
+			}
 			if !got.Equal(tt.expected) {
 				t.Errorf("%s failed:\nwant %s\ngot  %s", tt.name, tt.expected, got)
 			}

@@ -22,7 +22,7 @@ func TestViewInstanceRange(t *testing.T) {
 
 	// Insert 5 days of events
 	base := time.Date(2025, 5, 20, 0, 0, 0, 0, time.UTC)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		ts := base.AddDate(0, 0, i)
 		instance.Append(Event{
 			Timestamp: ts,

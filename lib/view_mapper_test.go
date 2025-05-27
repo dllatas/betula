@@ -22,7 +22,7 @@ func TestViewMapper_Basic(t *testing.T) {
 		},
 	}
 
-	wantPartition := "2024-05-19"
+	wantPartition := time.Date(2024, 5, 19, 0, 0, 0, 0, time.UTC)
 	gotPartition, err := mapper.PartitionKey(ev)
 	if err != nil {
 		t.Errorf("partition failed %s", err.Error())

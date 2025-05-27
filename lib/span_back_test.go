@@ -166,7 +166,7 @@ func TestSpanBack_OneDayOnHourlyView(t *testing.T) {
 
 	// Optional: verify shard keys are hour-aligned
 	for i, shard := range shards {
-		expected := startOfDay.Add(time.Duration(i) * time.Hour).Format(mapper.layout)
+		expected := startOfDay.Add(time.Duration(i) * time.Hour)
 		if shard.Key != expected {
 			t.Errorf("shard[%d] key mismatch: got %s, want %s", i, shard.Key, expected)
 		}

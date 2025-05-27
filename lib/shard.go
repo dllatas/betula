@@ -6,36 +6,22 @@ import (
 )
 
 type Shard struct {
-	Key       string           // e.g. "2024-05-20"
-	ParsedKey time.Time        // for internal comparisons if needed
-	Roots     map[string]*Node // The actual tree root for this partition
-	Count     int              // Optional: total count at shard level
+	Key   time.Time        // for internal comparisons if needed
+	Roots map[string]*Node // The actual tree root for this partition
+	Count int              // Optional: total count at shard level
 }
 
-func newShard(key string, ts time.Time, fmt string) (*Shard, error) {
-	t, err := time.Parse(fmt, ts.Format(fmt))
-	if err != nil {
-		return nil, err
-	}
-
-	r := make(map[string]*Node)
-
+func newShard(key time.Time) (*Shard, error) {
 	return &Shard{
-		Key:       key,
-		ParsedKey: t,
-		Roots:     r,
-		Count:     0,
+		Key:   key,
+		Roots: map[string]*Node{},
+		Count: 0,
 	}, nil
 }
 
 func compareShard(l, r *Shard) bool {
-	if l.Key != r.Key {
-		slog.Warn("shard key mismatch", "l", l.Key, "r", r.Key)
-		return false
-	}
-
-	if !l.ParsedKey.Equal(r.ParsedKey) {
-		slog.Warn("shard parsed key mismatch", "l", l.ParsedKey, "r", r.ParsedKey)
+	if !l.Key.Equal(r.Key) {
+		slog.Warn("shard parsed key mismatch", "l", l.Key, "r", r.Key)
 		return false
 	}
 

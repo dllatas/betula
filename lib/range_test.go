@@ -10,7 +10,7 @@ type RangeTest struct {
 	Desc      string
 	From      time.Time
 	To        time.Time
-	Expected  []string
+	Expected  []time.Time
 	ExpectErr bool
 }
 
@@ -32,34 +32,46 @@ func TestViewInstanceRange(t *testing.T) {
 
 	tests := []RangeTest{
 		{
-			Desc:     "Exact match",
-			From:     base.AddDate(0, 0, 1),
-			To:       base.AddDate(0, 0, 3),
-			Expected: []string{"2025-05-21", "2025-05-22", "2025-05-23"},
+			Desc: "Exact match",
+			From: base.AddDate(0, 0, 1),
+			To:   base.AddDate(0, 0, 3),
+			Expected: []time.Time{
+				time.Date(2025, 5, 21, 0, 0, 0, 0, time.UTC),
+				time.Date(2025, 5, 22, 0, 0, 0, 0, time.UTC),
+				time.Date(2025, 5, 23, 0, 0, 0, 0, time.UTC),
+			},
 		},
 		{
-			Desc:     "Full range",
-			From:     base,
-			To:       base.AddDate(0, 0, 4),
-			Expected: []string{"2025-05-20", "2025-05-21", "2025-05-22", "2025-05-23", "2025-05-24"},
+			Desc: "Full range",
+			From: base,
+			To:   base.AddDate(0, 0, 4),
+			Expected: []time.Time{
+				time.Date(2025, 5, 20, 0, 0, 0, 0, time.UTC),
+				time.Date(2025, 5, 21, 0, 0, 0, 0, time.UTC),
+				time.Date(2025, 5, 22, 0, 0, 0, 0, time.UTC),
+				time.Date(2025, 5, 23, 0, 0, 0, 0, time.UTC),
+				time.Date(2025, 5, 24, 0, 0, 0, 0, time.UTC),
+			},
 		},
 		{
-			Desc:     "Single day",
-			From:     base.AddDate(0, 0, 2),
-			To:       base.AddDate(0, 0, 2),
-			Expected: []string{"2025-05-22"},
+			Desc: "Single day",
+			From: base.AddDate(0, 0, 2),
+			To:   base.AddDate(0, 0, 2),
+			Expected: []time.Time{
+				time.Date(2025, 5, 22, 0, 0, 0, 0, time.UTC),
+			},
 		},
 		{
 			Desc:     "Before range",
 			From:     base.AddDate(0, 0, -5),
 			To:       base.AddDate(0, 0, -1),
-			Expected: []string{},
+			Expected: []time.Time{},
 		},
 		{
 			Desc:     "After range",
 			From:     base.AddDate(0, 0, 5),
 			To:       base.AddDate(0, 0, 10),
-			Expected: []string{},
+			Expected: []time.Time{},
 		},
 		{
 			Desc:      "Invalid range",

@@ -15,15 +15,15 @@ type Event struct {
 type ViewInstance struct {
 	Mapper     *ViewMapper
 	Mu         sync.RWMutex
-	Shards     []*Shard       // sorted by partition key
-	ShardIndex map[string]int // partition key → index in shards
+	Shards     []*Shard          // sorted by partition key
+	ShardIndex map[time.Time]int // partition key → index in shards
 }
 
 func NewViewInstance(m *ViewMapper) *ViewInstance {
 	return &ViewInstance{
 		Mapper:     m,
 		Shards:     []*Shard{},
-		ShardIndex: map[string]int{},
+		ShardIndex: map[time.Time]int{},
 	}
 }
 
@@ -85,7 +85,7 @@ func compareViewInstances(l, r *ViewInstance) bool {
 		}
 	}
 
-	for i := 0; i < len(l.Shards); i++ {
+	for i := range len(l.Shards) {
 		if !compareShard(l.Shards[i], r.Shards[i]) {
 			return false
 		}

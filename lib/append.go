@@ -23,7 +23,7 @@ func (v *ViewInstance) Append(e Event) error {
 	if !found {
 		// new shard
 		var errShard error
-		shard, errShard = newShard(key, e.Timestamp, v.Mapper.layout)
+		shard, errShard = newShard(key)
 		if errShard != nil {
 			return errShard
 		}
@@ -70,7 +70,7 @@ func (v *ViewInstance) addShard(s *Shard) {
 	}
 
 	lastShard := v.Shards[len(v.Shards)-1]
-	if lastShard.ParsedKey.Before(s.ParsedKey) {
+	if lastShard.Key.Before(s.Key) {
 		v.Shards = append(v.Shards, s)
 		v.ShardIndex[s.Key] = len(v.Shards) - 1
 		return
@@ -78,7 +78,7 @@ func (v *ViewInstance) addShard(s *Shard) {
 
 	v.Shards = append(v.Shards, s)
 	sort.Slice(v.Shards, func(i, j int) bool {
-		return v.Shards[i].ParsedKey.Before(v.Shards[j].ParsedKey)
+		return v.Shards[i].Key.Before(v.Shards[j].Key)
 	})
 
 	// Rebuild the index map from scratch

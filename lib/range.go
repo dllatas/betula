@@ -11,13 +11,15 @@ func (v *ViewInstance) Range(from, to time.Time, verbose bool) ([]*Shard, error)
 		return nil, fmt.Errorf("invalid range: from %v is after to %v", from, to)
 	}
 
-	fromStr := from.Format(v.Mapper.layout)
-	toStr := to.Format(v.Mapper.layout)
+	fromAligned, err := v.Mapper.alignToPartition(from)
+	if err != nil {
+		return []*Shard{}, nil
+	}
 
-	fromIdx, found := v.ShardIndex[fromStr]
+	fromIdx, found := v.ShardIndex[fromAligned]
 	if !found {
 		if verbose {
-			slog.Warn("no index shard found", "from", fromStr, "formatted from", from)
+			slog.Warn("no index shard found", "from", fromAligned, "formatted from", from)
 		}
 		fromIdx = v.findCloserIndex(from, ">", verbose)
 		if fromIdx == -1 {
@@ -25,10 +27,15 @@ func (v *ViewInstance) Range(from, to time.Time, verbose bool) ([]*Shard, error)
 		}
 	}
 
-	toIdx, found := v.ShardIndex[toStr]
+	toAligned, err := v.Mapper.alignToPartition(to)
+	if err != nil {
+		return []*Shard{}, nil
+	}
+
+	toIdx, found := v.ShardIndex[toAligned]
 	if !found {
 		if verbose {
-			slog.Warn("no index shard found", "to", toStr, "formatted from", to)
+			slog.Warn("no index shard found", "to", toAligned, "formatted from", to)
 		}
 		toIdx = v.findCloserIndex(to, "<", verbose)
 		if toIdx == -1 {
@@ -37,7 +44,7 @@ func (v *ViewInstance) Range(from, to time.Time, verbose bool) ([]*Shard, error)
 	}
 
 	if verbose {
-		slog.Info("get shards for", "from", from, "fromStr", fromStr, "fromIdx", fromIdx, "to", to, "toStr", toStr, "toIdx", toIdx)
+		slog.Info("get shards for", "from", from, "fromStr", fromAligned, "fromIdx", fromIdx, "to", to, "toStr", toAligned, "toIdx", toIdx)
 	}
 
 	shards, err := v.getShardsByIndex(fromIdx, toIdx)
@@ -100,12 +107,12 @@ func (v *ViewInstance) findCloserIndex(timeRef time.Time, sign string, verbose b
 			slog.Info("findClosestLaterIndex", "head", head, "tail", tail, "middle", middle, "root", root)
 		}
 
-		if root.ParsedKey.Before(timeRef) {
+		if root.Key.Before(timeRef) {
 			head = middle + 1
 			continue
 		}
 
-		if root.ParsedKey.After(timeRef) {
+		if root.Key.After(timeRef) {
 			tail = middle - 1
 			continue
 		}
@@ -113,11 +120,11 @@ func (v *ViewInstance) findCloserIndex(timeRef time.Time, sign string, verbose b
 
 	found := v.Shards[middle]
 
-	if sign == "<" && found.ParsedKey.After(timeRef) {
+	if sign == "<" && found.Key.After(timeRef) {
 		return -1
 	}
 
-	if sign == ">" && found.ParsedKey.Before(timeRef) {
+	if sign == ">" && found.Key.Before(timeRef) {
 		return -1
 	}
 

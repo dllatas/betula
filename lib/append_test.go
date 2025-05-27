@@ -30,7 +30,11 @@ func TestAppendBasic(t *testing.T) {
 	}
 
 	// Check that shard was created
-	partitionKey := "2024-05-19"
+	partitionKey, err := instance.Mapper.PartitionKey(ev)
+	if err != nil {
+		t.Fatalf("partition key failed: %v", err)
+	}
+
 	idx, ok := instance.ShardIndex[partitionKey]
 	if !ok {
 		t.Fatalf("shard for %s not found", partitionKey)
@@ -142,14 +146,13 @@ func TestAppend(t *testing.T) {
 					},
 					Wanted: &ViewInstance{
 						Mapper: mapper,
-						ShardIndex: map[string]int{
-							now.Label: 0,
+						ShardIndex: map[time.Time]int{
+							now.Normalized: 0,
 						},
 						Shards: []*Shard{
 							{
-								Key:       now.Label,
-								ParsedKey: now.Normalized,
-								Count:     1,
+								Key:   now.Normalized,
+								Count: 1,
 								Roots: map[string]*Node{
 									"userid:" + userID: {
 										Key:   "userid",
@@ -188,14 +191,13 @@ func TestAppend(t *testing.T) {
 					},
 					Wanted: &ViewInstance{
 						Mapper: mapper,
-						ShardIndex: map[string]int{
-							now.Label: 0,
+						ShardIndex: map[time.Time]int{
+							now.Normalized: 0,
 						},
 						Shards: []*Shard{
 							{
-								Key:       now.Label,
-								ParsedKey: now.Normalized,
-								Count:     1,
+								Key:   now.Normalized,
+								Count: 1,
 								Roots: map[string]*Node{
 									"userid:" + userID: {
 										Key:   "userid",
@@ -229,15 +231,14 @@ func TestAppend(t *testing.T) {
 					},
 					Wanted: &ViewInstance{
 						Mapper: mapper,
-						ShardIndex: map[string]int{
-							now.Label:      0,
-							tomorrow.Label: 1,
+						ShardIndex: map[time.Time]int{
+							now.Normalized:      0,
+							tomorrow.Normalized: 1,
 						},
 						Shards: []*Shard{
 							{
-								Key:       now.Label,
-								ParsedKey: now.Normalized,
-								Count:     1,
+								Key:   now.Normalized,
+								Count: 1,
 								Roots: map[string]*Node{
 									"userid:" + userID: {
 										Key:   "userid",
@@ -255,9 +256,8 @@ func TestAppend(t *testing.T) {
 								},
 							},
 							{
-								Key:       tomorrow.Label,
-								ParsedKey: tomorrow.Normalized,
-								Count:     1,
+								Key:   tomorrow.Normalized,
+								Count: 1,
 								Roots: map[string]*Node{
 									"userid:" + userID: {
 										Key:   "userid",
@@ -303,14 +303,13 @@ func TestAppend(t *testing.T) {
 					},
 					Wanted: &ViewInstance{
 						Mapper: mapper,
-						ShardIndex: map[string]int{
-							now.Label: 0,
+						ShardIndex: map[time.Time]int{
+							now.Normalized: 0,
 						},
 						Shards: []*Shard{
 							{
-								Key:       now.Label,
-								ParsedKey: now.Normalized,
-								Count:     2,
+								Key:   now.Normalized,
+								Count: 2,
 								Roots: map[string]*Node{
 									"userid:" + userID: {
 										Key:   "userid",
@@ -363,16 +362,15 @@ func TestAppend(t *testing.T) {
 					},
 					Wanted: &ViewInstance{
 						Mapper: mapper,
-						ShardIndex: map[string]int{
-							yesterday.Label: 0,
-							now.Label:       1,
-							tomorrow.Label:  2,
+						ShardIndex: map[time.Time]int{
+							yesterday.Normalized: 0,
+							now.Normalized:       1,
+							tomorrow.Normalized:  2,
 						},
 						Shards: []*Shard{
 							{
-								Key:       yesterday.Label,
-								ParsedKey: yesterday.Normalized,
-								Count:     1,
+								Key:   yesterday.Normalized,
+								Count: 1,
 								Roots: map[string]*Node{
 									"userid:" + userID: {
 										Key:   "userid",
@@ -390,9 +388,8 @@ func TestAppend(t *testing.T) {
 								},
 							},
 							{
-								Key:       now.Label,
-								ParsedKey: now.Normalized,
-								Count:     1,
+								Key:   now.Normalized,
+								Count: 1,
 								Roots: map[string]*Node{
 									"userid:" + userID: {
 										Key:   "userid",
@@ -410,9 +407,8 @@ func TestAppend(t *testing.T) {
 								},
 							},
 							{
-								Key:       tomorrow.Label,
-								ParsedKey: tomorrow.Normalized,
-								Count:     1,
+								Key:   tomorrow.Normalized,
+								Count: 1,
 								Roots: map[string]*Node{
 									"userid:" + userID: {
 										Key:   "userid",

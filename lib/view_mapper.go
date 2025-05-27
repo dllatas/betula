@@ -2,6 +2,7 @@ package lib
 
 import (
 	"fmt"
+	"time"
 )
 
 type ViewMapper struct {
@@ -16,14 +17,25 @@ func NewViewMapper(v *ViewDefinition) *ViewMapper {
 	}
 }
 
-func (v *ViewMapper) PartitionKey(e Event) (string, error) {
-	if e.Timestamp.IsZero() {
-		return "", fmt.Errorf("partition key: timestamp has zero value. View: %s. TimeFormat: %s", v.d.Name, v.layout)
+func (v *ViewMapper) PartitionKey(e Event) (time.Time, error) {
+	return v.alignToPartition(e.Timestamp)
+}
+
+func (v *ViewMapper) alignToPartition(t time.Time) (time.Time, error) {
+	if t.IsZero() {
+		return time.Time{}, fmt.Errorf("align: zero time passed")
 	}
 
-	r := e.Timestamp.Format(v.layout)
+	label := t.Format(v.layout)
+	aligned, err := time.ParseInLocation(v.layout, label, time.UTC)
+	if err != nil {
+		return time.Time{}, fmt.Errorf(
+			"align: failed to parse formatted time. Value: %s, Layout: %s, Err: %w",
+			label, v.layout, err,
+		)
+	}
 
-	return r, nil
+	return aligned, nil
 }
 
 func (v *ViewMapper) TreePath(e Event) ([]string, error) {

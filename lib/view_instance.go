@@ -4,19 +4,23 @@ import (
 	"log"
 	"log/slog"
 	"sync"
+	"time"
 )
 
+type Event struct {
+	Timestamp time.Time
+	Labels    map[string]string
+}
+
 type ViewInstance struct {
-	Def        *ViewDefinition
 	Mapper     *ViewMapper
 	Mu         sync.RWMutex
 	Shards     []*Shard       // sorted by partition key
 	ShardIndex map[string]int // partition key → index in shards
 }
 
-func NewViewInstance(d *ViewDefinition, m *ViewMapper) *ViewInstance {
+func NewViewInstance(m *ViewMapper) *ViewInstance {
 	return &ViewInstance{
-		Def:        d,
 		Mapper:     m,
 		Shards:     []*Shard{},
 		ShardIndex: map[string]int{},
@@ -50,8 +54,8 @@ func compareViewInstances(l, r *ViewInstance) bool {
 		return false
 	}
 
-	if l.Def.TimeFormat != r.Def.TimeFormat {
-		slog.Warn("instance time format are different", "l", l.Def.TimeFormat, "r", r.Def.TimeFormat)
+	if l.Mapper.layout != r.Mapper.layout {
+		slog.Warn("instance time format are different", "l", l.Mapper.layout, "r", r.Mapper.layout)
 		return false
 	}
 

@@ -10,13 +10,11 @@ type Node struct {
 }
 
 func newNode(key string, value string) *Node {
-	n := make(map[string]*Node)
-
 	return &Node{
 		Key:   key,
 		Value: value,
 		Count: 0,
-		Nodes: n,
+		Nodes: map[string]*Node{},
 	}
 }
 

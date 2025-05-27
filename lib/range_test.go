@@ -17,7 +17,8 @@ type RangeTest struct {
 func TestViewInstanceRange(t *testing.T) {
 	view := NewViewDefinition("test", []string{"userid"}, "2006-01-02")
 	mapper := NewViewMapper(view)
-	instance := NewViewInstance(view, mapper)
+	instance := NewViewInstance(mapper)
+	verbose := false
 
 	// Insert 5 days of events
 	base := time.Date(2025, 5, 20, 0, 0, 0, 0, time.UTC)
@@ -70,7 +71,7 @@ func TestViewInstanceRange(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Desc, func(t *testing.T) {
-			result, err := instance.Range(test.From, test.To)
+			result, err := instance.Range(test.From, test.To, verbose)
 			if test.ExpectErr {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
@@ -83,7 +84,8 @@ func TestViewInstanceRange(t *testing.T) {
 			}
 
 			if len(result) != len(test.Expected) {
-				t.Fatalf("len: expected %d shards, got %d", len(test.Expected), len(result))
+				instance.Print(test.Desc)
+				t.Fatalf("len: expected %d shards, got %d. wanted %+v got %+v. From %+v To %+v", len(test.Expected), len(result), test.Expected, result, test.From, test.To)
 			}
 
 			for i, shard := range result {
@@ -92,5 +94,44 @@ func TestViewInstanceRange(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestFindClosestLaterIndex(t *testing.T) {
+	view := NewViewDefinition("test", []string{"userid"}, UnitDay)
+	mapper := NewViewMapper(view)
+	instance := NewViewInstance(mapper)
+	verbose := false
+
+	// Insert 5 days of events
+	base := time.Date(2025, 5, 20, 0, 0, 0, 0, time.UTC)
+	for i := range 5 {
+		ts := base.AddDate(0, 0, i)
+		instance.Append(Event{
+			Timestamp: ts,
+			Labels:    map[string]string{"userid": fmt.Sprintf("u%d", i)},
+		})
+	}
+
+	yesterday := time.Date(2025, 5, 19, 0, 0, 0, 0, time.UTC)
+
+	if verbose {
+		instance.Print("findClosestLaterIndex")
+	}
+
+	wanted := 0
+	got := instance.findCloserIndex(yesterday, ">", verbose)
+
+	if got != wanted {
+		t.Errorf("[yesterday] found wrong index wanted %d got %d", wanted, got)
+	}
+
+	daysLater := time.Date(2025, 5, 26, 0, 0, 0, 0, time.UTC)
+
+	wanted = 4
+	got = instance.findCloserIndex(daysLater, "<", verbose)
+
+	if got != wanted {
+		t.Errorf("[daysLater] found wrong index wanted %d got %d", wanted, got)
 	}
 }

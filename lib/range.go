@@ -6,24 +6,38 @@ import (
 	"time"
 )
 
-func (v *ViewInstance) Range(from, to time.Time) ([]*Shard, error) {
+func (v *ViewInstance) Range(from, to time.Time, verbose bool) ([]*Shard, error) {
 	if from.After(to) {
 		return nil, fmt.Errorf("invalid range: from %v is after to %v", from, to)
 	}
 
-	fromStr := from.Format(v.Def.TimeFormat)
-	toStr := to.Format(v.Def.TimeFormat)
+	fromStr := from.Format(v.Mapper.layout)
+	toStr := to.Format(v.Mapper.layout)
 
 	fromIdx, found := v.ShardIndex[fromStr]
 	if !found {
-		slog.Warn("no index shard found", "from", fromStr, "formatted from", from)
-		return []*Shard{}, nil
+		if verbose {
+			slog.Warn("no index shard found", "from", fromStr, "formatted from", from)
+		}
+		fromIdx = v.findCloserIndex(from, ">", verbose)
+		if fromIdx == -1 {
+			return []*Shard{}, nil
+		}
 	}
 
 	toIdx, found := v.ShardIndex[toStr]
 	if !found {
-		slog.Warn("no index shard found", "to", toStr, "formatted from", to)
-		return []*Shard{}, nil
+		if verbose {
+			slog.Warn("no index shard found", "to", toStr, "formatted from", to)
+		}
+		toIdx = v.findCloserIndex(to, "<", verbose)
+		if toIdx == -1 {
+			return []*Shard{}, nil
+		}
+	}
+
+	if verbose {
+		slog.Info("get shards for", "from", from, "fromStr", fromStr, "fromIdx", fromIdx, "to", to, "toStr", toStr, "toIdx", toIdx)
 	}
 
 	shards, err := v.getShardsByIndex(fromIdx, toIdx)
@@ -65,4 +79,47 @@ func (v *ViewInstance) getShardsByIndex(head, tail int) ([]*Shard, error) {
 	}
 
 	return v.Shards[head:tail], nil
+}
+
+// we know that timeRef does not exist
+func (v *ViewInstance) findCloserIndex(timeRef time.Time, sign string, verbose bool) int {
+	if len(v.Shards) == 0 {
+		return -1
+	}
+
+	head := 0
+	tail := len(v.Shards) - 1
+	middle := 0
+
+	for head <= tail {
+		middle = (head + tail) / 2
+
+		root := v.Shards[middle]
+
+		if verbose {
+			slog.Info("findClosestLaterIndex", "head", head, "tail", tail, "middle", middle, "root", root)
+		}
+
+		if root.ParsedKey.Before(timeRef) {
+			head = middle + 1
+			continue
+		}
+
+		if root.ParsedKey.After(timeRef) {
+			tail = middle - 1
+			continue
+		}
+	}
+
+	found := v.Shards[middle]
+
+	if sign == "<" && found.ParsedKey.After(timeRef) {
+		return -1
+	}
+
+	if sign == ">" && found.ParsedKey.Before(timeRef) {
+		return -1
+	}
+
+	return middle
 }

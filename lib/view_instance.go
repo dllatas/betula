@@ -31,7 +31,11 @@ func (v *ViewInstance) Print(title string) {
 	log.Printf("ViewInstance: %s", title)
 	space := "  "
 
-	for _, shard := range v.Shards {
+	printShards(v.Shards, space)
+}
+
+func printShards(shards []*Shard, space string) {
+	for _, shard := range shards {
 		log.Printf("%sShard %s (count: %d)", space, shard.Key, shard.Count)
 		printNodeMap(shard.Roots, space+"  ")
 	}

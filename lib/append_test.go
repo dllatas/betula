@@ -14,7 +14,7 @@ func TestAppendBasic(t *testing.T) {
 	)
 	mapper := NewViewMapper(view)
 
-	instance := NewViewInstance(view, mapper)
+	instance := NewViewInstance(mapper)
 
 	ev := Event{
 		Timestamp: time.Date(2024, 5, 19, 12, 0, 0, 0, time.UTC),
@@ -120,7 +120,7 @@ func TestAppend(t *testing.T) {
 	view := NewViewDefinition(
 		"test_view",
 		[]string{"userid", "habitid"},
-		timeLayout,
+		UnitDay,
 	)
 	mapper := NewViewMapper(view)
 
@@ -141,7 +141,6 @@ func TestAppend(t *testing.T) {
 						}
 					},
 					Wanted: &ViewInstance{
-						Def:    view,
 						Mapper: mapper,
 						ShardIndex: map[string]int{
 							now.Label: 0,
@@ -188,7 +187,6 @@ func TestAppend(t *testing.T) {
 						}
 					},
 					Wanted: &ViewInstance{
-						Def:    view,
 						Mapper: mapper,
 						ShardIndex: map[string]int{
 							now.Label: 0,
@@ -230,7 +228,6 @@ func TestAppend(t *testing.T) {
 						}
 					},
 					Wanted: &ViewInstance{
-						Def:    view,
 						Mapper: mapper,
 						ShardIndex: map[string]int{
 							now.Label:      0,
@@ -305,7 +302,6 @@ func TestAppend(t *testing.T) {
 						}
 					},
 					Wanted: &ViewInstance{
-						Def:    view,
 						Mapper: mapper,
 						ShardIndex: map[string]int{
 							now.Label: 0,
@@ -366,7 +362,6 @@ func TestAppend(t *testing.T) {
 						}
 					},
 					Wanted: &ViewInstance{
-						Def:    view,
 						Mapper: mapper,
 						ShardIndex: map[string]int{
 							yesterday.Label: 0,
@@ -442,7 +437,7 @@ func TestAppend(t *testing.T) {
 	}
 
 	for _, run := range runs {
-		instance := NewViewInstance(view, mapper)
+		instance := NewViewInstance(mapper)
 
 		for stepIdx, step := range run.Steps {
 			events := step.GetEvents()

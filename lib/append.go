@@ -23,7 +23,7 @@ func (v *ViewInstance) Append(e Event) error {
 	if !found {
 		// new shard
 		var errShard error
-		shard, errShard = newShard(key, e.Timestamp, v.Def.TimeFormat)
+		shard, errShard = newShard(key, e.Timestamp, v.Mapper.layout)
 		if errShard != nil {
 			return errShard
 		}
@@ -43,7 +43,7 @@ func (v *ViewInstance) Append(e Event) error {
 	for idx, treeValue := range treeValues {
 		var next *Node
 
-		orderKey := v.Def.KeyOrder[idx]
+		orderKey := v.Mapper.d.KeyOrder[idx]
 		mapKey := orderKey + ":" + treeValue
 
 		child, found := (*children)[mapKey]

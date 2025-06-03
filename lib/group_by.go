@@ -38,7 +38,8 @@ func (v *ViewInstance) GroupBy(keys []string) (map[string]int, error) {
 
 func (v *ViewInstance) GroupByWithShards(keys []string, shardsToGroup []*Shard) (map[string]int, error) {
 	if !v.Mapper.d.IsValidGroupBy(keys) {
-		return nil, fmt.Errorf("invalid group by key order: got %v expected %v", keys, v.Mapper.d.KeyOrder)
+		keyOrders := append([]string{ShardLabel}, v.Mapper.d.KeyOrder...)
+		return nil, fmt.Errorf("invalid group by key order: got %v expected %v", keys, keyOrders)
 	}
 
 	results := make(map[string]int)

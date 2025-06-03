@@ -1,6 +1,9 @@
 package lib
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type TimeUnit string
 
@@ -92,4 +95,33 @@ func NewViewDefinition(name string, keyOrder []string, unit TimeUnit) *ViewDefin
 
 func (v *ViewDefinition) String() string {
 	return fmt.Sprintf("View[%s] Keys: %v, Granularity: %s", v.Name, v.KeyOrder, v.Granularity)
+}
+
+func ParseUnit(unitToParse string) (TimeUnit, error) {
+	if unitToParse == "" {
+		return "", fmt.Errorf("no unit to parse")
+	}
+
+	switch strings.ToLower(unitToParse) {
+	case "year":
+		return UnitYear, nil
+	case "month":
+		return UnitMonth, nil
+	case "day":
+		return UnitDay, nil
+	case "hour":
+		return UnitHour, nil
+	case "minute":
+		return UnitMinute, nil
+	case "second":
+		return UnitSecond, nil
+	case "millisecond":
+		return UnitMilli, nil
+	case "microsecond":
+		return UnitMicro, nil
+	case "nanosecond":
+		return UnitNano, nil
+	default:
+		return "", fmt.Errorf("unknown time unit: %s", unitToParse)
+	}
 }

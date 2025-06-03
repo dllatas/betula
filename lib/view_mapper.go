@@ -17,6 +17,14 @@ func NewViewMapper(v *ViewDefinition) *ViewMapper {
 	}
 }
 
+func (v *ViewMapper) Layout() string {
+	return v.layout
+}
+
+func (v *ViewMapper) Granularity() TimeUnit {
+	return v.d.Granularity
+}
+
 func (v *ViewMapper) PartitionKey(e Event) (time.Time, error) {
 	return v.alignToPartition(e.Timestamp)
 }

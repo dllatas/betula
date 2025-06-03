@@ -14,6 +14,7 @@ const (
 	UnitMilli  TimeUnit = "millisecond"
 	UnitMicro  TimeUnit = "microsecond"
 	UnitNano   TimeUnit = "nanosecond"
+	ShardLabel string   = "shard"
 )
 
 var unitOrder = []TimeUnit{

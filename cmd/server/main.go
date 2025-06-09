@@ -38,23 +38,52 @@ func main() {
 		},
 	))
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-		LogStatus:   true,
-		LogURI:      true,
-		LogError:    true,
-		HandleError: true, // forwards error to the global error handler, so it can decide appropriate status code
+		LogStatus:       true,
+		LogLatency:      true,
+		LogMethod:       true,
+		LogURI:          true,
+		LogRoutePath:    true,
+		LogRequestID:    true,
+		LogRemoteIP:     true,
+		LogProtocol:     true,
+		LogUserAgent:    true,
+		LogReferer:      true,
+		LogResponseSize: true,
+		LogError:        true,
+		HandleError:     true, // forwards error to the global error handler, so it can decide appropriate status code
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
-			if v.Error == nil {
-				logger.LogAttrs(context.Background(), slog.LevelInfo, "REQUEST",
-					slog.String("uri", v.URI),
-					slog.Int("status", v.Status),
-				)
-			} else {
-				logger.LogAttrs(context.Background(), slog.LevelError, "REQUEST_ERROR",
-					slog.String("uri", v.URI),
-					slog.Int("status", v.Status),
-					slog.String("err", v.Error.Error()),
-				)
+			attrs := []slog.Attr{
+				slog.String("method", v.Method),
+				slog.String("uri", v.URI),
+				slog.String("route", v.RoutePath),
+				slog.String("request_id", v.RequestID),
+				slog.String("remote_ip", v.RemoteIP),
+				slog.String("protocol", v.Protocol),
+				slog.String("user_agent", v.UserAgent),
+				slog.String("referer", v.Referer),
+				slog.Int("status", v.Status),
+				slog.String("latency", v.Latency.String()),
+				slog.Int64("response_size", v.ResponseSize),
 			}
+
+			if v.Error != nil {
+				attrs = append(attrs, slog.String("err", v.Error.Error()))
+				logger.LogAttrs(
+					c.Request().Context(),
+					slog.LevelError,
+					"ERROR",
+					attrs...,
+				)
+				return nil
+			}
+
+			logger.LogAttrs(
+				c.Request().Context(),
+				slog.LevelInfo,
+				"REQUEST",
+				attrs...,
+			)
+
 			return nil
 		},
 	}))

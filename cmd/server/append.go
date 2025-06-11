@@ -50,7 +50,7 @@ func (s *Server) append(c echo.Context) error {
 		layouts = append(layouts, req.Timefmt)
 	}
 
-	layouts = append(layouts, view.Mapper.Layout())
+	layouts = append(layouts, view.Mapper.ViewLayout())
 
 	t := time.Time{}
 	for i, layout := range layouts {
@@ -73,9 +73,28 @@ func (s *Server) append(c echo.Context) error {
 		Labels:    req.Values,
 	}
 
+	if s.store.WAL != nil {
+		entry := lib.WALEntry{
+			Timestamp: time.Now().UTC(),
+			Op:        "append",
+			ViewName:  view.Mapper.D.Name,
+			Payload:   e,
+		}
+
+		if err := s.store.WAL.Write(entry); err != nil {
+			slog.Error("append: failed to write wal", "err", err)
+			return c.JSON(http.StatusInternalServerError, "failed to write ahead event")
+		}
+	}
+
 	if err := view.Append(e); err != nil {
 		slog.Error("append: failed to append", "err", err)
-		return c.JSON(http.StatusInternalServerError, err.Error())
+
+		if truncErr := s.store.WAL.RollbackLast(); truncErr != nil {
+			slog.Error("append: failed to rollback wal", "rollbackErr", truncErr)
+		}
+
+		return c.JSON(http.StatusInternalServerError, "failed to append event to view")
 	}
 
 	return c.NoContent(http.StatusOK)

@@ -3,6 +3,7 @@ package main
 import (
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/dllatas/betula/lib"
 	"github.com/labstack/echo/v4"
@@ -36,8 +37,28 @@ func (s *Server) createView(c echo.Context) error {
 	mapper := lib.NewViewMapper(def)
 	instance := lib.NewViewInstance(mapper)
 
+	if s.store.WAL != nil {
+		entry := lib.WALEntry{
+			Timestamp: time.Now().UTC(),
+			Op:        "create-view",
+			ViewName:  req.Name,
+			Keys:      req.Keys,
+			Unit:      req.Unit,
+		}
+
+		if err := s.store.WAL.Write(entry); err != nil {
+			slog.Error("delete: failed to write wal", "err", err)
+			return c.JSON(http.StatusInternalServerError, "failed to write ahead event")
+		}
+	}
+
 	if err := s.store.Register(instance); err != nil {
 		slog.Error("create view: store register", "err", err.Error())
+
+		if truncErr := s.store.WAL.RollbackLast(); truncErr != nil {
+			slog.Error("create view: failed to rollback wal", "rollbackErr", truncErr)
+		}
+
 		return c.JSON(http.StatusConflict, err.Error())
 	}
 

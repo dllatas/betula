@@ -24,7 +24,7 @@ func TestStore_RegisterAndGet(t *testing.T) {
 	})
 
 	t.Run("retrieves registered view", func(t *testing.T) {
-		got, err := store.Get(i.Mapper.d.Name)
+		got, err := store.Get(i.Mapper.D.Name)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}

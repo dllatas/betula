@@ -6,23 +6,23 @@ import (
 )
 
 type ViewMapper struct {
-	d      *ViewDefinition
-	layout string
+	D      *ViewDefinition
+	Layout string
 }
 
 func NewViewMapper(v *ViewDefinition) *ViewMapper {
 	return &ViewMapper{
-		d:      v,
-		layout: layoutForUnit(v.Granularity),
+		D:      v,
+		Layout: layoutForUnit(v.Granularity),
 	}
 }
 
-func (v *ViewMapper) Layout() string {
-	return v.layout
+func (v *ViewMapper) ViewLayout() string {
+	return v.Layout
 }
 
 func (v *ViewMapper) Granularity() TimeUnit {
-	return v.d.Granularity
+	return v.D.Granularity
 }
 
 func (v *ViewMapper) PartitionKey(e Event) (time.Time, error) {
@@ -34,12 +34,12 @@ func (v *ViewMapper) alignToPartition(t time.Time) (time.Time, error) {
 		return time.Time{}, fmt.Errorf("align: zero time passed")
 	}
 
-	label := t.Format(v.layout)
-	aligned, err := time.ParseInLocation(v.layout, label, time.UTC)
+	label := t.Format(v.Layout)
+	aligned, err := time.ParseInLocation(v.Layout, label, time.UTC)
 	if err != nil {
 		return time.Time{}, fmt.Errorf(
 			"align: failed to parse formatted time. Value: %s, Layout: %s, Err: %w",
-			label, v.layout, err,
+			label, v.Layout, err,
 		)
 	}
 
@@ -47,9 +47,9 @@ func (v *ViewMapper) alignToPartition(t time.Time) (time.Time, error) {
 }
 
 func (v *ViewMapper) TreePath(e Event) ([]string, error) {
-	path := make([]string, 0, len(v.d.KeyOrder))
+	path := make([]string, 0, len(v.D.KeyOrder))
 
-	for _, label := range v.d.KeyOrder {
+	for _, label := range v.D.KeyOrder {
 		val, ok := e.Labels[label]
 
 		if val == "" || !ok {

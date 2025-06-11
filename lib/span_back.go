@@ -10,8 +10,8 @@ import (
 // ending at `ref`, inclusive. The number of returned shards depends on
 // the view's granularity. The query unit must be coarser or equal to the view’s granularity.
 func (v *ViewInstance) SpanBack(ref time.Time, unit TimeUnit, duration int, verbose bool) ([]*Shard, error) {
-	if !IsUnitCompatible(v.Mapper.d.Granularity, unit) {
-		return nil, fmt.Errorf("sub-shared resolution not supported. Def %s Query %s", v.Mapper.d.Granularity, unit)
+	if !IsUnitCompatible(v.Mapper.D.Granularity, unit) {
+		return nil, fmt.Errorf("sub-shared resolution not supported. Def %s Query %s", v.Mapper.D.Granularity, unit)
 	}
 
 	if duration == 0 {

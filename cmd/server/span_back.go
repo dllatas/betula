@@ -49,7 +49,7 @@ func (s *Server) spanback(c echo.Context) error {
 	if req.Ref != "" {
 		layout := req.Timefmt
 		if layout == "" {
-			layout = view.Mapper.Layout()
+			layout = view.Mapper.ViewLayout()
 		}
 		ref, err = time.Parse(layout, req.Ref)
 		if err != nil {

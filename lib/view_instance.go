@@ -13,8 +13,9 @@ type Event struct {
 }
 
 type ViewInstance struct {
+	mu sync.RWMutex
+
 	Mapper     *ViewMapper
-	Mu         sync.RWMutex
 	Shards     []*Shard          // sorted by partition key
 	ShardIndex map[time.Time]int // partition key → index in shards
 }
@@ -58,8 +59,8 @@ func compareViewInstances(l, r *ViewInstance) bool {
 		return false
 	}
 
-	if l.Mapper.layout != r.Mapper.layout {
-		slog.Warn("instance time format are different", "l", l.Mapper.layout, "r", r.Mapper.layout)
+	if l.Mapper.Layout != r.Mapper.Layout {
+		slog.Warn("instance time format are different", "l", l.Mapper.Layout, "r", r.Mapper.Layout)
 		return false
 	}
 

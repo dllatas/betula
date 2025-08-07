@@ -110,9 +110,12 @@ func (w *WAL) Replay() ([]WALEntry, error) {
 				return data, nil
 			}
 
-			slog.Error("wal replay: decode failed", "entries decoded", entryCount, "err", err)
-			return nil, fmt.Errorf("wal replay: decode failed: %w", err)
+			slog.Warn("wal replay: decode failed", "entries decoded", entryCount, "entry", entry, "err", err)
+			continue
+			// return nil, fmt.Errorf("wal replay: decode failed: %w", err)
 		}
+
+		slog.Info("wal replay: decoded", "count", entryCount, "entry", entry)
 
 		data = append(data, entry)
 		entryCount++

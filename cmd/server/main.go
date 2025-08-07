@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/gob"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -31,6 +32,9 @@ func (c Config) Print() {
 }
 
 func main() {
+	gob.Register(lib.WALEntry{})
+	gob.Register(lib.Event{})
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

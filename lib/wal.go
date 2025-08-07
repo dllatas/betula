@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -80,6 +81,16 @@ func (w *WAL) Write(entry WALEntry) error {
 }
 
 func (w *WAL) Replay() ([]WALEntry, error) {
+	exists, err := ExistsFile(w.path)
+	if err != nil {
+		return nil, fmt.Errorf("wal replay: failed to verify that file exists: %w", err)
+	}
+
+	if !exists {
+		slog.Warn("wal file does not exist, skipping replay", "path", w.path)
+		return []WALEntry{}, nil
+	}
+
 	f, err := os.Open(w.path)
 	if err != nil {
 		return nil, fmt.Errorf("wal replay: failed to open file: %w", err)
@@ -87,21 +98,24 @@ func (w *WAL) Replay() ([]WALEntry, error) {
 	defer f.Close()
 
 	dec := gob.NewDecoder(f)
-
 	var data []WALEntry
+	entryCount := 0
 
 	for {
 		var entry WALEntry
 		err := dec.Decode(&entry)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
+				slog.Info("wal replay: finished successfully", "entries", entryCount)
 				return data, nil
 			}
 
+			slog.Error("wal replay: decode failed", "entries decoded", entryCount, "err", err)
 			return nil, fmt.Errorf("wal replay: decode failed: %w", err)
 		}
 
 		data = append(data, entry)
+		entryCount++
 	}
 }
 

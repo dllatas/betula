@@ -159,7 +159,7 @@ func (s *Store) LoadWALEntries(entries []WALEntry) error {
 				if existing != nil {
 					areEqual := compareViewInstances(instance, existing)
 					if !areEqual {
-						return fmt.Errorf("replay create-view: register %w", err)
+						slog.Warn("replay create-view:", "skip", true, "existing", existing, "skipped", instance)
 					}
 				}
 			}

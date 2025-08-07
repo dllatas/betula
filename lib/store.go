@@ -155,7 +155,13 @@ func (s *Store) LoadWALEntries(entries []WALEntry) error {
 			instance := NewViewInstance(mapper)
 
 			if err := s.Register(instance); err != nil {
-				return fmt.Errorf("replay create-view: %w", err)
+				existing, _ := s.Get(instance.Mapper.D.Name)
+				if existing != nil {
+					areEqual := compareViewInstances(instance, existing)
+					if !areEqual {
+						return fmt.Errorf("replay create-view: register %w", err)
+					}
+				}
 			}
 		default:
 			return fmt.Errorf("apply wal: unsupported op %q in view %s", entry.Op, entry.ViewName)

@@ -90,43 +90,57 @@ func (v *ViewInstance) getShardsByIndex(head, tail int) ([]*Shard, error) {
 
 // we know that timeRef does not exist
 func (v *ViewInstance) findCloserIndex(timeRef time.Time, sign string, verbose bool) int {
+	// Return the closest index according to sign:
+	//  - sign == ">": first index whose key is strictly after timeRef
+	//  - sign == "<":  last index whose key is strictly before timeRef
 	if len(v.Shards) == 0 {
 		return -1
 	}
 
-	head := 0
-	tail := len(v.Shards) - 1
-	middle := 0
+	l, r := 0, len(v.Shards)-1
 
-	for head <= tail {
-		middle = (head + tail) / 2
+	switch sign {
+	case ">":
+		// Lower bound for keys > timeRef
+		ans := -1
+		for l <= r {
+			m := (l + r) / 2
+			root := v.Shards[m]
+			if verbose {
+				slog.Info("findCloserIndex(>)", "head", l, "tail", r, "middle", m, "root", root)
+			}
+			if root.Key.After(timeRef) {
+				ans = m
+				r = m - 1
+			} else {
+				// root <= timeRef: move right
+				l = m + 1
+			}
+		}
+		return ans
 
-		root := v.Shards[middle]
-
+	case "<":
+		// Upper bound for keys < timeRef
+		ans := -1
+		for l <= r {
+			m := (l + r) / 2
+			root := v.Shards[m]
+			if verbose {
+				slog.Info("findCloserIndex(<)", "head", l, "tail", r, "middle", m, "root", root)
+			}
+			if root.Key.Before(timeRef) {
+				ans = m
+				l = m + 1
+			} else {
+				// root >= timeRef: move left
+				r = m - 1
+			}
+		}
+		return ans
+	default:
 		if verbose {
-			slog.Info("findClosestLaterIndex", "head", head, "tail", tail, "middle", middle, "root", root)
+			slog.Warn("findCloserIndex: unknown sign", "sign", sign)
 		}
-
-		if root.Key.Before(timeRef) {
-			head = middle + 1
-			continue
-		}
-
-		if root.Key.After(timeRef) {
-			tail = middle - 1
-			continue
-		}
-	}
-
-	found := v.Shards[middle]
-
-	if sign == "<" && found.Key.After(timeRef) {
 		return -1
 	}
-
-	if sign == ">" && found.Key.Before(timeRef) {
-		return -1
-	}
-
-	return middle
 }

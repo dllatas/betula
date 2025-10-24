@@ -20,13 +20,14 @@ func (v *ViewInstance) SpanBack(ref time.Time, unit TimeUnit, duration int, verb
 
 	var from time.Time
 	var err error
-	if duration == 1 {
-		from, err = truncateToUnit(ref, unit)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		from, err = truncateBack(ref, unit, duration)
+	// Always anchor to the start of the queried unit at ref,
+	// then move back duration-1 units for an inclusive window.
+	from, err = truncateToUnit(ref, unit)
+	if err != nil {
+		return nil, err
+	}
+	if duration > 1 {
+		from, err = truncateBack(from, unit, duration-1)
 		if err != nil {
 			return nil, err
 		}

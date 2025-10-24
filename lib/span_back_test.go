@@ -114,18 +114,60 @@ func TestSpanBack(t *testing.T) {
 		}
 	}
 
-	// Span back 2 days from now
+	// Span back 2 days from now (inclusive window: today and yesterday)
 	shards, err := instance.SpanBack(now, UnitDay, 2, verbose)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(shards) != 3 {
+	if len(shards) != 2 {
 		instance.Print("")
 		for _, shard := range shards {
 			fmt.Printf("(%+v)\n", shard)
 		}
 		t.Errorf("expected 2 shards, got %d", len(shards))
+	}
+}
+
+func TestSpanBack_LastSevenDays_InclusiveWindow(t *testing.T) {
+	view := NewViewDefinition("habito-user-habit", []string{"userid"}, UnitDay)
+	mapper := NewViewMapper(view)
+	instance := NewViewInstance(mapper)
+	verbose := false
+
+	// Reference: Oct 24, 2025 at 10:00 UTC
+	now := time.Date(2025, 10, 24, 10, 0, 0, 0, time.UTC)
+
+	// Add one event for each day from Oct 17..Oct 24
+	for i := 0; i <= 7; i++ {
+		ts := time.Date(2025, 10, 24-i, 9, 0, 0, 0, time.UTC)
+		if err := instance.Append(Event{Timestamp: ts, Labels: map[string]string{"userid": "u1"}}); err != nil {
+			t.Fatalf("append failed for day offset %d: %v", i, err)
+		}
+	}
+
+	// Ask for last 7 days (inclusive): expect 7 shards covering Oct 18..Oct 24
+	shards, err := instance.SpanBack(now, UnitDay, 7, verbose)
+	if err != nil {
+		t.Fatalf("spanback failed: %v", err)
+	}
+
+	if len(shards) != 7 {
+		instance.Print("spanback-7d")
+		for _, shard := range shards {
+			fmt.Printf("(%+v)\n", shard)
+		}
+		t.Fatalf("expected 7 shards, got %d", len(shards))
+	}
+
+	// Verify the first shard is Oct 18 and last is Oct 24
+	expectedStart := time.Date(2025, 10, 18, 0, 0, 0, 0, time.UTC)
+	expectedEnd := time.Date(2025, 10, 24, 0, 0, 0, 0, time.UTC)
+	if !shards[0].Key.Equal(expectedStart) {
+		t.Errorf("unexpected first shard: got %s want %s", shards[0].Key, expectedStart)
+	}
+	if !shards[len(shards)-1].Key.Equal(expectedEnd) {
+		t.Errorf("unexpected last shard: got %s want %s", shards[len(shards)-1].Key, expectedEnd)
 	}
 }
 

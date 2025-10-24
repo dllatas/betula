@@ -69,6 +69,9 @@ func NewInMemoryStore() *Store {
 	}
 }
 
+// NewStore is kept for backward test compatibility and returns an in-memory store.
+func NewStore() *Store { return NewInMemoryStore() }
+
 func (s *Store) Register(view *ViewInstance) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

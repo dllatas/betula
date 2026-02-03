@@ -77,3 +77,7 @@ func main() {
 - Run coverage across the repo: `go test ./... -coverprofile=coverage.out`
 - Inspect the HTML report locally: `go tool cover -html=coverage.out`
 - Coverage result files (`coverage.out`, `cover.out`, etc.) are build artifacts; keep them out of version control.
+
+## License
+
+MIT, see `LICENSE`.

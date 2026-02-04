@@ -70,8 +70,8 @@ func TestCompareViewInstances(t *testing.T) {
 			Granularity: UnitDay,
 		}
 		m := &ViewMapper{
-			d:      d,
-			layout: layout,
+			D:      d,
+			Layout: layout,
 		}
 
 		shards := make([]*Shard, len(shardKeys))

@@ -63,8 +63,8 @@ func TestViewMapper_AccessorsAndAlignErrors(t *testing.T) {
 	view := NewViewDefinition("habit", []string{"user"}, UnitDay)
 	mapper := NewViewMapper(view)
 
-	if mapper.Layout() == "" {
-		t.Fatal("expected non-empty layout from Layout()")
+	if mapper.ViewLayout() == "" {
+		t.Fatal("expected non-empty layout from ViewLayout()")
 	}
 	if mapper.Granularity() != UnitDay {
 		t.Fatalf("expected Granularity() %q, got %q", UnitDay, mapper.Granularity())

@@ -95,6 +95,14 @@ func TestTruncateBack(t *testing.T) {
 	}
 }
 
+func TestTruncateBack_UnsupportedUnit(t *testing.T) {
+	ref := time.Now()
+	_, err := truncateBack(ref, TimeUnit("unsupported"), 1)
+	if err == nil {
+		t.Fatal("expected error for unsupported unit, got nil")
+	}
+}
+
 func TestSpanBack(t *testing.T) {
 	view := NewViewDefinition("test", []string{"userid"}, UnitDay)
 	mapper := NewViewMapper(view)
@@ -219,6 +227,30 @@ func TestSpanBack_OneDayOnHourlyView(t *testing.T) {
 	}
 }
 
+func TestSpanBack_Errors(t *testing.T) {
+	view := NewViewDefinition("test", []string{"userid"}, UnitDay)
+	mapper := NewViewMapper(view)
+	instance := NewViewInstance(mapper)
+	verbose := false
+
+	ref := time.Date(2025, 5, 22, 9, 0, 0, 0, time.UTC)
+
+	// incompatible units: view granularity day, query hour (finer)
+	if _, err := instance.SpanBack(ref, UnitHour, 1, verbose); err == nil {
+		t.Fatal("expected error for incompatible units, got nil")
+	}
+
+	// zero duration
+	if _, err := instance.SpanBack(ref, UnitDay, 0, verbose); err == nil {
+		t.Fatal("expected error for zero duration, got nil")
+	}
+
+	// unsupported unit flows into truncateToUnit/truncateBack error
+	if _, err := instance.SpanBack(ref, TimeUnit("unsupported"), 1, verbose); err == nil {
+		t.Fatal("expected error for unsupported unit, got nil")
+	}
+}
+
 func TestTruncateToUnit(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -292,5 +324,12 @@ func TestTruncateToUnit(t *testing.T) {
 				t.Errorf("%s failed:\nwant %s\ngot  %s", tt.name, tt.expected, got)
 			}
 		})
+	}
+}
+
+func TestTruncateToUnit_UnsupportedUnit(t *testing.T) {
+	now := time.Now()
+	if _, err := truncateToUnit(now, TimeUnit("unsupported")); err == nil {
+		t.Fatal("expected error for unsupported unit, got nil")
 	}
 }

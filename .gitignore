@@ -25,5 +25,9 @@ go.work.sum
 .env
 
 bin
+
+# Local build/test artifacts
+.cache/
+AGENTS.md
 checkpoint.*
 test.txt

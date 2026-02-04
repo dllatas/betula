@@ -88,7 +88,7 @@ func TestAppendAndSpanbackFlow(t *testing.T) {
 	viewName := "metrics"
 	view := registerTestView(t, s, viewName, []string{"country", "user"}, lib.UnitMinute)
 
-	ts := time.Date(2024, time.January, 1, 12, 0, 0, 0, time.UTC).Format(view.Mapper.Layout())
+	ts := time.Date(2024, time.January, 1, 12, 0, 0, 0, time.UTC).Format(view.Mapper.ViewLayout())
 	appendBody := map[string]any{
 		"view":      viewName,
 		"timestamp": ts,

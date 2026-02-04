@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type spanbackRequest struct {
+type SpanbackRequest struct {
 	View    string              `json:"view"`
 	Ref     string              `json:"ref,omitempty"` // optional
 	Unit    string              `json:"unit"`          // required
@@ -21,7 +21,7 @@ type spanbackRequest struct {
 }
 
 func (s *Server) spanback(c echo.Context) error {
-	var req spanbackRequest
+	var req SpanbackRequest
 
 	if err := c.Bind(&req); err != nil {
 		slog.Error("spanback: bind failed", "err", err)
@@ -49,7 +49,7 @@ func (s *Server) spanback(c echo.Context) error {
 	if req.Ref != "" {
 		layout := req.Timefmt
 		if layout == "" {
-			layout = view.Mapper.Layout()
+			layout = view.Mapper.ViewLayout()
 		}
 		ref, err = time.Parse(layout, req.Ref)
 		if err != nil {

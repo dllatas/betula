@@ -3,8 +3,8 @@ package lib
 import "sort"
 
 func (v *ViewInstance) Append(e Event) error {
-	v.Mu.Lock()
-	defer v.Mu.Unlock()
+	v.mu.Lock()
+	defer v.mu.Unlock()
 
 	key, err := v.Mapper.PartitionKey(e)
 	if err != nil {
@@ -43,7 +43,7 @@ func (v *ViewInstance) Append(e Event) error {
 	for idx, treeValue := range treeValues {
 		var next *Node
 
-		orderKey := v.Mapper.d.KeyOrder[idx]
+		orderKey := v.Mapper.D.KeyOrder[idx]
 		mapKey := shardMapKey(orderKey, treeValue)
 
 		child, found := (*children)[mapKey]

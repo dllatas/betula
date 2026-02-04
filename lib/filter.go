@@ -13,7 +13,7 @@ func (v *ViewInstance) FilterWithShards(match map[string][]string, shardsToFilte
 
 	resulting := shardsToFilter
 
-	for _, orderKey := range v.Mapper.d.KeyOrder {
+	for _, orderKey := range v.Mapper.D.KeyOrder {
 		matches, found := match[orderKey]
 		if !found {
 			continue

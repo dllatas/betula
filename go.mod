@@ -3,6 +3,7 @@ module github.com/dllatas/betula
 go 1.24.0
 
 require (
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo-contrib v0.17.4
 	github.com/labstack/echo/v4 v4.13.4
 )

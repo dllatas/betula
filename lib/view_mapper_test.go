@@ -6,11 +6,7 @@ import (
 )
 
 func TestViewMapper_Basic(t *testing.T) {
-	view := NewViewDefinition(
-		"habit",
-		[]string{"user", "habit", "event"},
-		"2006-01-02",
-	)
+	view := NewViewDefinition("habit", []string{"user", "habit", "event"}, UnitDay)
 	mapper := NewViewMapper(view)
 
 	ev := Event{
@@ -45,11 +41,7 @@ func TestViewMapper_Basic(t *testing.T) {
 }
 
 func TestViewMapper_MissingLabel(t *testing.T) {
-	view := NewViewDefinition(
-		"habit",
-		[]string{"user", "habit", "event"},
-		"2006-01-02",
-	)
+	view := NewViewDefinition("habit", []string{"user", "habit", "event"}, UnitDay)
 
 	mapper := NewViewMapper(view)
 
@@ -64,5 +56,23 @@ func TestViewMapper_MissingLabel(t *testing.T) {
 	_, err := mapper.TreePath(ev)
 	if err == nil {
 		t.Fatal("expected error for missing label key, got nil")
+	}
+}
+
+func TestViewMapper_AccessorsAndAlignErrors(t *testing.T) {
+	view := NewViewDefinition("habit", []string{"user"}, UnitDay)
+	mapper := NewViewMapper(view)
+
+	if mapper.Layout() == "" {
+		t.Fatal("expected non-empty layout from Layout()")
+	}
+	if mapper.Granularity() != UnitDay {
+		t.Fatalf("expected Granularity() %q, got %q", UnitDay, mapper.Granularity())
+	}
+
+	// alignToPartition should fail on zero time
+	zero := time.Time{}
+	if _, err := mapper.alignToPartition(zero); err == nil {
+		t.Fatal("expected error when aligning zero time, got nil")
 	}
 }

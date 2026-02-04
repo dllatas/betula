@@ -179,6 +179,62 @@ func TestSpanBack_LastSevenDays_InclusiveWindow(t *testing.T) {
 	}
 }
 
+func TestSpanBack_SevenDays_DoesNotIncludePriorSunday(t *testing.T) {
+	view := NewViewDefinition("week-window", []string{"userid"}, UnitDay)
+	mapper := NewViewMapper(view)
+	instance := NewViewInstance(mapper)
+
+	ref := time.Date(2026, 2, 1, 15, 0, 0, 0, time.UTC)
+	if ref.Weekday() != time.Sunday {
+		t.Fatalf("test setup error: expected ref to be Sunday, got %s", ref.Weekday())
+	}
+
+	refDayStart := time.Date(ref.Year(), ref.Month(), ref.Day(), 0, 0, 0, 0, time.UTC)
+	wantStart := refDayStart.AddDate(0, 0, -6)   // Monday of the inclusive 7-day window
+	priorSunday := refDayStart.AddDate(0, 0, -7) // the day that must NOT be included
+	wantEnd := refDayStart                       // Sunday
+
+	appendOnDay := func(dayStart time.Time) {
+		t.Helper()
+		ts := dayStart.Add(12 * time.Hour)
+		if err := instance.Append(Event{
+			Timestamp: ts,
+			Labels:    map[string]string{"userid": "u1"},
+		}); err != nil {
+			t.Fatalf("append failed for %s: %v", dayStart, err)
+		}
+	}
+
+	// Populate shards for the desired window plus the prior Sunday shard.
+	appendOnDay(priorSunday)
+	for d := wantStart; !d.After(wantEnd); d = d.AddDate(0, 0, 1) {
+		appendOnDay(d)
+	}
+
+	shards, err := instance.SpanBack(ref, UnitDay, 7, false)
+	if err != nil {
+		t.Fatalf("spanback failed: %v", err)
+	}
+
+	if len(shards) != 7 {
+		instance.Print("spanback-7d-sunday")
+		t.Fatalf("expected 7 shards, got %d", len(shards))
+	}
+
+	if !shards[0].Key.Equal(wantStart) {
+		t.Fatalf("unexpected first shard: got %s want %s", shards[0].Key, wantStart)
+	}
+	if !shards[len(shards)-1].Key.Equal(wantEnd) {
+		t.Fatalf("unexpected last shard: got %s want %s", shards[len(shards)-1].Key, wantEnd)
+	}
+
+	for _, shard := range shards {
+		if shard.Key.Equal(priorSunday) {
+			t.Fatalf("unexpected inclusion of prior Sunday shard %s in 7-day spanback", priorSunday)
+		}
+	}
+}
+
 func TestSpanBack_OneDayOnHourlyView(t *testing.T) {
 	view := NewViewDefinition("hourly-view", []string{"userid"}, UnitHour)
 	mapper := NewViewMapper(view)

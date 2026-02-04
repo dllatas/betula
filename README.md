@@ -1,6 +1,6 @@
 # Betula
 
-A high-performance, in-memory time-partitioned tree engine for aggregating and querying hierarchical event data across user-defined views.
+An in-memory time-partitioned tree engine for aggregating and querying hierarchical event data across user-defined views.
 
 ## Installation
 
@@ -21,49 +21,49 @@ Betula stores events in **views**. A view defines:
 package main
 
 import (
-	"fmt"
-	"time"
+ "fmt"
+ "time"
 
-	"github.com/dllatas/betula/lib"
+ "github.com/dllatas/betula/lib"
 )
 
 func main() {
-	// 1) Define a view.
-	def := lib.NewViewDefinition("sessions", []string{"country", "user"}, lib.UnitMinute)
-	mapper := lib.NewViewMapper(def)
-	view := lib.NewViewInstance(mapper)
+ // 1) Define a view.
+ def := lib.NewViewDefinition("sessions", []string{"country", "user"}, lib.UnitMinute)
+ mapper := lib.NewViewMapper(def)
+ view := lib.NewViewInstance(mapper)
 
-	// (Optional) Keep multiple views in a store.
-	store := lib.NewStore()
-	_ = store.Register(view)
+ // (Optional) Keep multiple views in a store.
+ store := lib.NewStore()
+ _ = store.Register(view)
 
-	// 2) Append events.
-	_ = view.Append(lib.Event{
-		Timestamp: time.Date(2026, 2, 3, 21, 0, 0, 0, time.UTC),
-		Labels: map[string]string{
-			"country": "fr",
-			"user":    "u1",
-		},
-	})
-	_ = view.Append(lib.Event{
-		Timestamp: time.Date(2026, 2, 3, 21, 5, 0, 0, time.UTC),
-		Labels: map[string]string{
-			"country": "fr",
-			"user":    "u2",
-		},
-	})
+ // 2) Append events.
+ _ = view.Append(lib.Event{
+  Timestamp: time.Date(2026, 2, 3, 21, 0, 0, 0, time.UTC),
+  Labels: map[string]string{
+   "country": "fr",
+   "user":    "u1",
+  },
+ })
+ _ = view.Append(lib.Event{
+  Timestamp: time.Date(2026, 2, 3, 21, 5, 0, 0, time.UTC),
+  Labels: map[string]string{
+   "country": "fr",
+   "user":    "u2",
+  },
+ })
 
-	// 3) Query a time window (SpanBack is built on Range).
-	ref := time.Date(2026, 2, 3, 21, 5, 0, 0, time.UTC)
-	shards, _ := view.SpanBack(ref, lib.UnitMinute, 10, false)
+ // 3) Query a time window (SpanBack is built on Range).
+ ref := time.Date(2026, 2, 3, 21, 5, 0, 0, time.UTC)
+ shards, _ := view.SpanBack(ref, lib.UnitMinute, 10, false)
 
-	// 4) Filter and group results.
-	filtered, _ := view.FilterWithShards(map[string][]string{
-		"country": []string{"fr"},
-	}, shards)
+ // 4) Filter and group results.
+ filtered, _ := view.FilterWithShards(map[string][]string{
+  "country": []string{"fr"},
+ }, shards)
 
-	grouped, _ := view.GroupByWithShards([]string{"country"}, filtered)
-	fmt.Println(grouped) // map["fr"]=2
+ grouped, _ := view.GroupByWithShards([]string{"country"}, filtered)
+ fmt.Println(grouped) // map["fr"]=2
 }
 ```
 
@@ -76,7 +76,6 @@ func main() {
 
 - Run coverage across the repo: `go test ./... -coverprofile=coverage.out`
 - Inspect the HTML report locally: `go tool cover -html=coverage.out`
-- Coverage result files (`coverage.out`, `cover.out`, etc.) are build artifacts; keep them out of version control.
 
 ## License
 

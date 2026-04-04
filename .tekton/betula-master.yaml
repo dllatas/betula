@@ -1,0 +1,162 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: betula-master
+  annotations:
+    pipelinesascode.tekton.dev/task: "git-clone"
+    pipelinesascode.tekton.dev/target-namespace: "ci"
+    pipelinesascode.tekton.dev/on-cel-expression: >
+      event == "push" &&
+      (target_branch == "master" || target_branch == "refs/heads/master")
+    pipelinesascode.tekton.dev/cancel-in-progress: "true"
+    pipelinesascode.tekton.dev/max-keep-runs: "10"
+spec:
+  params:
+    - name: repo-url
+      value: "{{repo_url}}"
+    - name: revision
+      value: "{{revision}}"
+    - name: image-repo
+      value: harbor.harokilabs.com/staging/betula
+    - name: image-branch-tag
+      value: master
+    - name: push-image
+      value: "true"
+  pipelineSpec:
+    params:
+      - name: repo-url
+        type: string
+      - name: revision
+        type: string
+      - name: image-repo
+        type: string
+      - name: image-branch-tag
+        type: string
+      - name: push-image
+        type: string
+    workspaces:
+      - name: source
+      - name: basic-auth
+      - name: dockerconfig
+    tasks:
+      - name: clone
+        taskRef:
+          name: git-clone
+        params:
+          - name: url
+            value: "$(params.repo-url)"
+          - name: revision
+            value: "$(params.revision)"
+          - name: depth
+            value: "0"
+          - name: deleteExisting
+            value: "true"
+        workspaces:
+          - name: output
+            workspace: source
+          - name: basic-auth
+            workspace: basic-auth
+      - name: test
+        runAfter:
+          - clone
+        workspaces:
+          - name: source
+            workspace: source
+        taskSpec:
+          workspaces:
+            - name: source
+          steps:
+            - name: run-tests
+              image: docker.io/golang:1.24
+              workingDir: $(workspaces.source.path)
+              script: |
+                #!/usr/bin/env bash
+                set -euo pipefail
+                echo "--- go vet ---"
+                go vet ./...
+                echo "--- go test ---"
+                go test ./...
+      - name: build
+        runAfter:
+          - test
+        params:
+          - name: revision
+            value: "$(params.revision)"
+          - name: image-repo
+            value: "$(params.image-repo)"
+          - name: image-branch-tag
+            value: "$(params.image-branch-tag)"
+          - name: push-image
+            value: "$(params.push-image)"
+        workspaces:
+          - name: source
+            workspace: source
+          - name: dockerconfig
+            workspace: dockerconfig
+        taskSpec:
+          params:
+            - name: revision
+            - name: image-repo
+            - name: image-branch-tag
+            - name: push-image
+          workspaces:
+            - name: source
+            - name: dockerconfig
+              optional: true
+          stepTemplate:
+            workingDir: $(workspaces.source.path)
+            securityContext:
+              privileged: true
+          steps:
+            - name: build-image
+              image: quay.io/buildah/stable:v1.39.2
+              script: |
+                #!/usr/bin/env bash
+                set -euo pipefail
+
+                IMAGE_REPO="$(params.image-repo)"
+                IMAGE_SHA_TAG="$(params.revision)"
+                IMAGE_BRANCH_TAG="$(params.image-branch-tag)"
+
+                AUTH_FLAG=""
+                if [ "$(workspaces.dockerconfig.bound)" = "true" ]; then
+                  if [ -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]; then
+                    AUTH_FLAG="--authfile $(workspaces.dockerconfig.path)/.dockerconfigjson"
+                  elif [ -f "$(workspaces.dockerconfig.path)/config.json" ]; then
+                    AUTH_FLAG="--authfile $(workspaces.dockerconfig.path)/config.json"
+                  fi
+                fi
+
+                buildah bud \
+                  --build-arg COMMIT_SHA="$IMAGE_SHA_TAG" \
+                  -t "$IMAGE_REPO:$IMAGE_SHA_TAG" \
+                  -t "$IMAGE_REPO:$IMAGE_BRANCH_TAG" \
+                  -f Dockerfile .
+
+                if [ "$(params.push-image)" = "true" ]; then
+                  buildah push $AUTH_FLAG "$IMAGE_REPO:$IMAGE_SHA_TAG"
+                  buildah push $AUTH_FLAG "$IMAGE_REPO:$IMAGE_BRANCH_TAG"
+                fi
+  taskRunTemplate:
+    podTemplate:
+      securityContext:
+        fsGroup: 65532
+      nodeSelector:
+        harokilabs.com/capacity-class: general
+  serviceAccountName: ci-services
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn-ci-ephemeral
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+    - name: basic-auth
+      secret:
+        secretName: "{{git_auth_secret}}"
+    - name: dockerconfig
+      secret:
+        secretName: docker-credentials

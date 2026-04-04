@@ -1,4 +1,4 @@
-# Betula Agent Guide
+# Betula — Agent Guide
 
 ## Purpose
 Betula is an in-memory time-partitioned tree engine for aggregating and querying hierarchical event data. It ships as a reusable Go library (`lib/`) and a thin Echo HTTP server (`cmd/server/`).

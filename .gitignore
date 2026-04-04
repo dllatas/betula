@@ -28,6 +28,9 @@ bin
 
 # Local build/test artifacts
 .cache/
-AGENTS.md
 checkpoint.*
 test.txt
+
+# Claude Code local state
+.claude/settings.local.json
+.claude/worktrees/

@@ -16,7 +16,7 @@ Review pull requests and code changes for betula.
 Navigate and explain the betula codebase.
 
 ### Entry Points
-- **Library consumers**: start at `lib/view_instance.go` (Append, SpanBack, Filter, GroupBy) and `lib/store.go` (Register, Get)
+- **Library consumers**: start at `lib/view_instance.go` for the `ViewInstance` type, then see `lib/append.go`, `lib/span_back.go`, `lib/filter.go`, `lib/group_by.go` for the main operations, and `lib/store.go` for `Register`/`Get`
 - **HTTP API**: start at `cmd/server/main.go` for routes, then individual handler files (`append.go`, `span_back.go`, `views.go`, `delete.go`)
 - **Persistence**: `lib/wal.go` for write-ahead log, `lib/store.go` for checkpoint save/load, `cmd/server/store.go` for startup recovery sequence
 
@@ -27,12 +27,13 @@ Navigate and explain the betula codebase.
 ## Deployment
 Build and deploy the betula server container.
 
-### Steps
+### Production (Tekton PaC)
+CI is handled by `.tekton/betula-master.yaml` (push to master) and `.tekton/betula-pr.yaml` (PRs). The pipeline runs clone → test → build+push automatically. Images land at `harbor.harokilabs.com/staging/betula:<sha>` and `:<branch-tag>`.
+
+### Local Dev Build
 1. Run `go test ./...` to validate
 2. Run `go vet ./...` for correctness
-3. Build image: `docker build -t betula:$(git rev-parse --short HEAD) .`
-4. Tag for registry if needed: `docker tag betula:<sha> <registry>/betula:<sha>`
-5. Push: `docker push <registry>/betula:<sha>`
+3. Build image: `docker build --build-arg COMMIT_SHA=$(git rev-parse --short HEAD) -t betula:$(git rev-parse --short HEAD) .`
 
 ### Notes
 - The Dockerfile uses `COMMIT_SHA` build arg to embed version via `-ldflags`

@@ -9,7 +9,7 @@ metadata:
       event == "pull_request" &&
       target_branch == "master" &&
       source_url == target_url
-    pipelinesascode.tekton.dev/cancel-in-progress: "true"
+    pipelinesascode.tekton.dev/cancel-in-progress: "false"
     pipelinesascode.tekton.dev/max-keep-runs: "10"
 spec:
   params:

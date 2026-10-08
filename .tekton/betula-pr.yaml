@@ -69,6 +69,15 @@ spec:
           steps:
             - name: run-tests
               image: docker.io/golang:1.24
+              computeResources:
+                requests:
+                  cpu: 500m
+                  memory: 1Gi
+                  ephemeral-storage: 2Gi
+                limits:
+                  cpu: "2"
+                  memory: 2Gi
+                  ephemeral-storage: 4Gi
               workingDir: $(workspaces.source.path)
               script: |
                 #!/usr/bin/env bash
@@ -111,6 +120,15 @@ spec:
           steps:
             - name: build-image
               image: quay.io/buildah/stable:v1.39.2
+              computeResources:
+                requests:
+                  cpu: "2"
+                  memory: 4Gi
+                  ephemeral-storage: 10Gi
+                limits:
+                  cpu: "4"
+                  memory: 8Gi
+                  ephemeral-storage: 20Gi
               script: |
                 #!/usr/bin/env bash
                 set -euo pipefail

@@ -156,12 +156,12 @@ spec:
                   buildah push $AUTH_FLAG "$IMAGE_REPO:$IMAGE_BRANCH_TAG"
                 fi
   taskRunTemplate:
+    serviceAccountName: ci-services
     podTemplate:
       securityContext:
         fsGroup: 65532
       nodeSelector:
         harokilabs.com/capacity-class: general
-  serviceAccountName: ci-services
   workspaces:
     - name: source
       volumeClaimTemplate:

@@ -127,7 +127,7 @@ spec:
                   ephemeral-storage: 10Gi
                 limits:
                   cpu: "4"
-                  memory: 8Gi
+                  memory: 4Gi
                   ephemeral-storage: 20Gi
               script: |
                 #!/usr/bin/env bash
